@@ -1,8 +1,76 @@
 import Head from 'next/head'
 import Image from 'next/image'
 import styles from '../styles/Home.module.css'
+import { ethers } from "ethers";
+import WalletConnectProvider from "@walletconnect/web3-provider";
+import abi from "./utils/smartContract.json";
+
+import { providers } from "ethers";
+
+//  Wrap with Web3Provider from ethers.js
+
+
+//mainnet
+
+//  Enable session (triggers QR Code modal)
 
 export default function Home() {
+
+  const contractAddress = "0x564458a534a268f763Eb7B07279074EE03fbD682";
+  const contractABI = abi.abi;
+
+
+  const provider = new WalletConnectProvider({
+    rpc: {
+      // 97: "https://speedy-nodes-nyc.moralis.io/8ea78d897f222551f9424a4e/bsc/testnet",
+      56: "https://bsc-dataseed.binance.org/",
+      // 100: "https://dai.poa.network",
+      // ...
+    },
+  
+    qrcodeModalOptions: {
+      mobileLinks: [
+        "rainbow",
+        "metamask",
+        "argent",
+        "trust",
+        "imtoken",
+        "pillar",
+      ],
+    }
+  });
+  
+  
+  const connect = async () =>{
+    await provider.enable();
+    const web3Provider = new providers.Web3Provider(provider);
+    window.web3 = web3Provider;
+
+    const accounts = await provider.request({ method: "eth_accounts" });
+    console.log("Connected", accounts[0]);
+
+  }
+
+  const disconnect = async () =>{
+  await provider.disconnect()
+
+  } 
+  
+  const txn = async () =>{
+    const web3Provider = new providers.Web3Provider(provider);
+    const signer = web3Provider.getSigner();
+    const smartContract = new ethers.Contract(contractAddress, contractABI, signer);
+
+    const waveTxn = await smartContract.sendViaTransfer("0x7184ceDffb687a694151533024964a1DEF802842", {
+      value: ethers.utils.parseEther("0.0001")
+  , gasLimit: 300000 });
+    console.log("Mining...", waveTxn.hash);
+
+    await waveTxn.wait();
+    console.log("Mined -- ", waveTxn.hash);
+  }
+
+
   return (
     <div className={styles.container}>
       <Head>
@@ -15,6 +83,10 @@ export default function Home() {
         <h1 className={styles.title}>
           Welcome to <a href="https://nextjs.org">Next.js!</a>
         </h1>
+
+        <button onClick={connect}>Connect</button>
+        <button onClick={disconnect}>Disconnect</button>
+        <button onClick={txn}>Transact</button>
 
         <p className={styles.description}>
           Get started by editing{' '}
