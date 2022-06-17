@@ -4,71 +4,89 @@ import styles from '../styles/Home.module.css'
 import { ethers } from "ethers";
 import WalletConnectProvider from "@walletconnect/web3-provider";
 import abi from "./utils/smartContract.json";
-
 import { providers } from "ethers";
+import { useState } from 'react';
 
-//  Wrap with Web3Provider from ethers.js
-
-
-//mainnet
-
-//  Enable session (triggers QR Code modal)
 
 export default function Home() {
 
-  const contractAddress = "0x564458a534a268f763Eb7B07279074EE03fbD682";
-  const contractABI = abi.abi;
+  const [message, setMessage] = useState("");
 
+
+  const contractAddress = "0xA69a308100158280620a701cbd6e61854BB9AE33";
+  const contractABI = abi.abi;
 
   const provider = new WalletConnectProvider({
     rpc: {
-      // 97: "https://speedy-nodes-nyc.moralis.io/8ea78d897f222551f9424a4e/bsc/testnet",
-      56: "https://bsc-dataseed.binance.org/",
-      // 100: "https://dai.poa.network",
-      // ...
+      97: "https://data-seed-prebsc-1-s1.binance.org:8545/",
+      56: "https://bsc-dataseed.binance.org/", 
     },
-  
-    qrcodeModalOptions: {
-      mobileLinks: [
-        "rainbow",
-        "metamask",
-        "argent",
-        "trust",
-        "imtoken",
-        "pillar",
-      ],
-    }
   });
   
   
   const connect = async () =>{
+
     await provider.enable();
     const web3Provider = new providers.Web3Provider(provider);
     window.web3 = web3Provider;
-
     const accounts = await provider.request({ method: "eth_accounts" });
     console.log("Connected", accounts[0]);
 
   }
 
   const disconnect = async () =>{
-  await provider.disconnect()
-
+    await provider.disconnect();
   } 
   
-  const txn = async () =>{
+  const sendGift = async () =>{
     const web3Provider = new providers.Web3Provider(provider);
     const signer = web3Provider.getSigner();
     const smartContract = new ethers.Contract(contractAddress, contractABI, signer);
 
-    const waveTxn = await smartContract.sendViaTransfer("0x7184ceDffb687a694151533024964a1DEF802842", {
+    const sendGiftTxn = await smartContract.sendGift("0x7184ceDffb687a694151533024964a1DEF802842", {
       value: ethers.utils.parseEther("0.0001")
   , gasLimit: 300000 });
-    console.log("Mining...", waveTxn.hash);
+    console.log("Mining...", sendGiftTxn.hash);
 
-    await waveTxn.wait();
-    console.log("Mined -- ", waveTxn.hash);
+    await sendGiftTxn.wait();
+    console.log("Mined -- ", sendGiftTxn.hash);
   }
+
+  const sendMessage = async (e) => {
+    // let btn = e.currentTarget;
+    // btn.classList.toggle("loading");
+
+    try {
+
+      const web3Provider = new providers.Web3Provider(provider);
+      const signer = web3Provider.getSigner();
+      const smartContract = new ethers.Contract(contractAddress, contractABI, signer);
+  
+        // setSendingWaveProgress("Establishing connection with Smart Contract!")
+      let numberOfMessages = await smartContract.getTotalMessages();
+        console.log("Total message count...", numberOfMessages.toNumber());
+
+        const messageTxn = await smartContract.sendMessage(message, { gasLimit: 300000 });
+        // setSendingWaveProgress("Mining Transaction...!");
+        console.log("Mining...", messageTxn.hash);
+
+        await messageTxn.wait();
+        // setSendingWaveProgress("Finishing transaction")
+
+        console.log("Mined -- ", messageTxn.hash);
+
+        
+        // btn.classList.toggle("loading");
+
+        count = await testContract.getTotalTests();
+        console.log("Retrieved total wave count...", numberOfMessages.toNumber());
+        // setSendingWaveProgress("")
+
+      
+    } catch (error) {
+      console.log(error);
+    }
+}
 
 
   return (
@@ -81,47 +99,18 @@ export default function Home() {
 
       <main className={styles.main}>
         <h1 className={styles.title}>
-          Welcome to <a href="https://nextjs.org">Next.js!</a>
+          Happy Birthday  <a href="https://nextjs.org">Nengi</a>
         </h1>
 
-        <button onClick={connect}>Connect</button>
+        <button onClick={connect}>Connect Wallet</button>
         <button onClick={disconnect}>Disconnect</button>
-        <button onClick={txn}>Transact</button>
 
-        <p className={styles.description}>
-          Get started by editing{' '}
-          <code className={styles.code}>pages/index.js</code>
-        </p>
+        <input type="text" placeholder="Type Birthday Message Here!" className="input w-full max-w-xs input-bordered" name={"message"} value={message} onChange={(e) => setMessage(e.target.value)} />
 
-        <div className={styles.grid}>
-          <a href="https://nextjs.org/docs" className={styles.card}>
-            <h2>Documentation &rarr;</h2>
-            <p>Find in-depth information about Next.js features and API.</p>
-          </a>
+        <button onClick={sendMessage}>Send A Message</button>
+        <button onClick={sendGift}>Send A Token</button>
 
-          <a href="https://nextjs.org/learn" className={styles.card}>
-            <h2>Learn &rarr;</h2>
-            <p>Learn about Next.js in an interactive course with quizzes!</p>
-          </a>
-
-          <a
-            href="https://github.com/vercel/next.js/tree/canary/examples"
-            className={styles.card}
-          >
-            <h2>Examples &rarr;</h2>
-            <p>Discover and deploy boilerplate example Next.js projects.</p>
-          </a>
-
-          <a
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-          >
-            <h2>Deploy &rarr;</h2>
-            <p>
-              Instantly deploy your Next.js site to a public URL with Vercel.
-            </p>
-          </a>
-        </div>
+        
       </main>
 
       <footer className={styles.footer}>
