@@ -7,24 +7,69 @@ import abi from "./utils/smartContract.json";
 import { providers } from "ethers";
 import { useState } from 'react';
 
+import Web3 from "web3";
+import Web3Modal from "web3modal";
+
+
+const providerOptions = {
+  walletconnect: {
+      package: WalletConnectProvider,
+      options: {
+          rpc: {
+            97: "https://data-seed-prebsc-1-s1.binance.org:8545/",
+
+          },
+          chainId: 97
+      }
+  }
+}
+
+const web3Modal = new Web3Modal({
+  // network: "testnet", // optional
+  cacheProvider: true, // optional
+  providerOptions // required
+});
+
+
 
 export default function Home() {
+
+  
 
   const [message, setMessage] = useState("");
 
 
-  const contractAddress = "0xA69a308100158280620a701cbd6e61854BB9AE33";
+  const contractAddress = "0x92761E4902fd50A129778945aDBcb35D1bd123F3";
   const contractABI = abi.abi;
 
-  const provider = new WalletConnectProvider({
-    rpc: {
-      97: "https://data-seed-prebsc-1-s1.binance.org:8545/",
-      56: "https://bsc-dataseed.binance.org/", 
-    },
-  });
+  // const providerOptions = {
+  //   /* See Provider Options Section */
+  // };
+
   
+
+  
+  
+
+
+
+
+  // const provider = new WalletConnectProvider({
+  //   rpc: {
+  //     97: "https://data-seed-prebsc-1-s1.binance.org:8545/",
+  //     // 56: "https://bsc-dataseed.binance.org/", 
+  //   },
+  // });
+  
+
   
   const connect = async () =>{
+    
+  const provider = await web3Modal.connect();
+  // await web3Modal.toggleModal();
+  // const newWeb3 = new Web3(provider);
+
+  // const web3 = new Web3(provider);
 
     await provider.enable();
     const web3Provider = new providers.Web3Provider(provider);
@@ -52,7 +97,7 @@ export default function Home() {
     console.log("Mined -- ", sendGiftTxn.hash);
   }
 
-  const sendMessage = async (e) => {
+  const sendMessage = async () => {
     // let btn = e.currentTarget;
     // btn.classList.toggle("loading");
 
@@ -66,7 +111,7 @@ export default function Home() {
       let numberOfMessages = await smartContract.getTotalMessages();
         console.log("Total message count...", numberOfMessages.toNumber());
 
-        const messageTxn = await smartContract.sendMessage(message, { gasLimit: 300000 });
+        const messageTxn = await smartContract.sendMessage(message);
         // setSendingWaveProgress("Mining Transaction...!");
         console.log("Mining...", messageTxn.hash);
 
@@ -78,7 +123,7 @@ export default function Home() {
         
         // btn.classList.toggle("loading");
 
-        count = await testContract.getTotalTests();
+        count = await smartContract.getTotalTests();
         console.log("Retrieved total wave count...", numberOfMessages.toNumber());
         // setSendingWaveProgress("")
 
